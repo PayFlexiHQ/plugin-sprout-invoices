@@ -1,8 +1,8 @@
 <?php
 /*
-Plugin Name: Sprout Invoices Add-on - PayFlexi Flexible Checkout
+Plugin Name: Sprout Invoices Add-on - PayFlexi (Pay in Instalments)
 Plugin URI: https://developers.payflexi.co/
-Description: Accept Full or Installment Payments with PayFlexi for Sprout Invoices. Give your customers the option to spread the cost of an invoice  in several installments and automate recollection.
+Description: Accept Full or Instalment Payments with PayFlexi for Sprout Invoices. Give your customers the option to spread the cost of an invoice  in several installments and automate recollection.
 Author: PayFlexi
 Version: 1.0
 Author URI: https://payflexi.co
@@ -14,7 +14,7 @@ Author URI: https://payflexi.co
 define('SI_ADDON_PAYFLEXI_VERSION', '1.0');
 define('SI_ADDON_PAYFLEXI_DOWNLOAD_ID', 141);
 define('SI_ADDON_PAYFLEXI_FILE', __FILE__);
-define('SI_ADDON_PAYFLEXI_NAME', 'Sprout Invoices PayFlexi Flexible Checkout');
+define('SI_ADDON_PAYFLEXI_NAME', 'Sprout Invoices PayFlexi Instalment Payments');
 define('SI_ADDON_PAYFLEXI_URL', plugins_url('', __FILE__));
 
 

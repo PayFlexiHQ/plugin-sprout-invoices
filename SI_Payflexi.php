@@ -15,8 +15,9 @@ class SI_Payflexi extends SI_Credit_Card_Processors
     const TOKEN_INPUT_NAME = 'payflexi_charge_token';
 
     const API_MODE_OPTION = 'si_payflexi_mode';
-    const CURRENCY_CODE_OPTION = 'si_Payflexi_currency';
-    const PAYMENT_METHOD = 'Debit & Credit Card (PayFlexi)';
+    const CURRENCY_CODE_OPTION = 'si_payflexi_currency';
+    const PAYMENT_GATEWAY_OPTION = 'si_payflexi_payment_gateway';
+    const PAYMENT_METHOD = 'PayFlexi (Pay in Instalments)';
     const PAYMENT_SLUG = 'payflexi';
     const TOKEN_KEY = 'si_token_key'; // Combine with $blog_id to get the actual meta key
     const PAYER_ID = 'si_payer_id'; // Combine with $blog_id to get the actual meta key
@@ -33,6 +34,7 @@ class SI_Payflexi extends SI_Credit_Card_Processors
     private static $api_secret_key;
     private static $api_pub_key;
     private static $currency_code = 'USD';
+    private static $payment_gateway = 'stripe';
 
     public static function get_instance()
     {
@@ -60,7 +62,7 @@ class SI_Payflexi extends SI_Credit_Card_Processors
     public static function register()
     {
         // Register processor
-        self::add_payment_processor(__CLASS__, __('PayFlexi Flexible Checkout', 'sprout-invoices'));
+        self::add_payment_processor(__CLASS__, __('PayFlexi', 'sprout-invoices'));
         
         if ( ! self::is_active() ) {
 			return;
@@ -111,6 +113,7 @@ class SI_Payflexi extends SI_Credit_Card_Processors
         self::$payment_modal = get_option(self::MODAL_JS_OPTION, true);
         self::$disable_payflexi_js = get_option(self::DISABLE_JS_OPTION, false);
         self::$currency_code = get_option(self::CURRENCY_CODE_OPTION, 'USD');
+        self::$payment_gateway = get_option(self::PAYMENT_GATEWAY_OPTION, 'stripe');
 
         self::$api_secret_key = get_option(self::API_SECRET_KEY_OPTION, '');
         self::$api_pub_key = get_option(self::API_PUB_KEY_OPTION, '');
@@ -125,7 +128,7 @@ class SI_Payflexi extends SI_Credit_Card_Processors
         }
 
         add_action('rest_api_init', function () {
-            register_rest_route( 'sprout/invoices/', '/webhook', array(
+            register_rest_route( 'sprout/invoices/', '/payflexi/webhook', array(
               'methods'  => 'POST',
               'callback' => array( __CLASS__, 'process_webhooks'),
             ));
@@ -151,13 +154,20 @@ class SI_Payflexi extends SI_Credit_Card_Processors
      */
     public static function register_settings()
     {
-
         // Settings
         $settings['payments'] = array(
             'si_payflexi_settings' => array(
                 'title' => __('PayFlexi Settings', 'sprout-invoices'),
                 'weight' => 200,
                 'settings' => array(
+                    self::PAYMENT_GATEWAY_OPTION => array(
+                        'label' => __('Enabled Payment Gateway', 'sprout-invoices'),
+                        'option' => array(
+                            'type' => 'text',
+                            'default' => self::$payment_gateway,
+                            'description' => __( 'This should correspond with your configured gateway on your PayFlexi merchant dashboard. Currently support "stripe" and "paystack"' , 'sprout-invoices' ),
+                            ),
+                        ),
                     self::API_MODE_OPTION => array(
                         'label' => __('Mode', 'sprout-invoices'),
                         'option' => array(
@@ -170,28 +180,28 @@ class SI_Payflexi extends SI_Credit_Card_Processors
                             ),
                         ),
                     self::API_SECRET_KEY_OPTION => array(
-                        'label' => __('Live Secret Key', 'sprout-invoices'),
+                        'label' => __('PayFlexi Live Secret Key', 'sprout-invoices'),
                         'option' => array(
                             'type' => 'text',
                             'default' => self::$api_secret_key,
                             ),
                         ),
                     self::API_PUB_KEY_OPTION => array(
-                        'label' => __('Live Public Key', 'sprout-invoices'),
+                        'label' => __('PayFlexi Live Public Key', 'sprout-invoices'),
                         'option' => array(
                             'type' => 'text',
                             'default' => self::$api_pub_key,
                             ),
                         ),
                     self::API_SECRET_KEY_TEST_OPTION => array(
-                        'label' => __('Test Secret Key', 'sprout-invoices'),
+                        'label' => __('PayFlexi Test Secret Key', 'sprout-invoices'),
                         'option' => array(
                             'type' => 'text',
                             'default' => self::$api_secret_key_test,
                             ),
                         ),
                     self::API_PUB_KEY_TEST_OPTION => array(
-                        'label' => __('Test Public Key', 'sprout-invoices'),
+                        'label' => __('PayFlexi Test Public Key', 'sprout-invoices'),
                         'option' => array(
                             'type' => 'text',
                             'default' => self::$api_pub_key_test,
@@ -209,7 +219,7 @@ class SI_Payflexi extends SI_Credit_Card_Processors
                         'label' => __( 'Webhook URL' , 'sprout-invoices' ),
                         'option' => array(
                             'type' => 'text',
-                            'default' => site_url() . '/sprout/invoices/webhook',
+                            'default' => site_url('', 'https') . '/wp-json/sprout/invoices/payflexi/webhook',
                             'description' => __( 'Please copy the webhook URL above and add it to your PayFlexi merchant dashboard in the API settings page.' , 'sprout-invoices' ),
                             ),
                         ),
@@ -246,6 +256,7 @@ class SI_Payflexi extends SI_Credit_Card_Processors
                 'key' => $key,
                 'name' => get_bloginfo( 'name' ),
                 'email' => $user_email,
+                'gateway' => self::$payment_gateway,
                 'currency' => self::get_currency_code($invoice_id),
                 'amount' => $payment_amount,
                 'ref' => $invoice_id.'_'.time(),
@@ -264,7 +275,7 @@ class SI_Payflexi extends SI_Credit_Card_Processors
 
             if ( '' !== $key ) {
                 ?>
-                    <?php printf( '<button id="payflexi_payment_button" class="button"><span>%s</span></button>', __( 'Pay in Installment (PayFlexi)' , 'sprout-invoices' ) ) ?>
+                    <?php printf( '<button id="payflexi_payment_button" class="button"><span>%s</span></button>', __( 'PayFlexi (Pay in Instalments) ' , 'sprout-invoices' ) ) ?>
                     <style type="text/css">
                         #payment_selection.dropdown #plaid.payment_option {
                             display: block;
@@ -319,10 +330,9 @@ class SI_Payflexi extends SI_Credit_Card_Processors
         if (! is_wp_error($request) && 200 == wp_remote_retrieve_response_code($request)) {
           
             $payflexi_response = json_decode(wp_remote_retrieve_body($request));
-
-            ray(['Payment Response' => $payflexi_response]);
             
             if (!$payflexi_response->errors) {
+                $payflexi_transaction_reference = $payflexi_response->data->reference;
                 $invoice_amount = $payflexi_response->data->amount ? $payflexi_response->data->amount : 0;
                 $amount_paid  = $payflexi_response->data->txn_amount ? $payflexi_response->data->txn_amount : 0;
 
@@ -342,6 +352,9 @@ class SI_Payflexi extends SI_Credit_Card_Processors
                 if (! $payment_id) {
                     return false;
                 }
+
+                add_post_meta($invoice->get_id(), '_sprout_payflexi_transaction_reference', $payflexi_transaction_reference, true );
+
                 $payment = SI_Payment::get_instance($payment_id);
                 do_action('payment_authorized', $payment);
                 $payment->set_status(SI_Payment::STATUS_COMPLETE);
@@ -382,64 +395,64 @@ class SI_Payflexi extends SI_Credit_Card_Processors
 
         $event = json_decode($json);
 
-        ray(['Webhook Event' => $event]);
-
-        if ('transaction.approved' == $event->event ) {
+        if ('transaction.approved' == $event->event && 'approved' == $event->data->status) {
+            
             http_response_code(200);
 
-            $invoice_id = get_the_id();
-            $invoice = SI_Invoice::get_instance( $invoice_id );
+            $payflexi_transaction_reference = $event->data->reference;
+			$payflexi_initial_transaction_reference = $event->data->initial_reference;
+
+            $invoice_details = explode( '_', $payflexi_initial_transaction_reference);
+            $invoice_id = (int) $invoice_details[0];
+
+            $invoice = SI_Invoice::get_instance($invoice_id);
 
             ray(['Webhook Invoice' => $invoice]);
 
-            $order_details = explode( '_', $event->data->initial_reference);
-            $order_id = (int) $order_details[0];
-            $order = wc_get_order($order_id);
-            $payflexi_txn_ref  = get_post_meta( $order_id, '_payflexi_txn_ref', true );
-
-            if ( $event->data->initial_reference != $payflexi_txn_ref ) {
+            if ($invoice->get_status() === SI_Invoice::STATUS_PAID) {
                 exit;
             }
 
-            if ( in_array( $order->get_status(), array( 'processing', 'completed' ) ) ) {
-                exit;
-            }
+            $saved_payflexi_transaction_reference = get_post_meta($invoice_id, '_sprout_payflexi_transaction_reference', true);
+           
+            ray(['Saved Ref' => $saved_payflexi_transaction_reference]);
+            
+            if((!$saved_payflexi_transaction_reference && $payflexi_transaction_reference === $payflexi_initial_transaction_reference) || $payflexi_transaction_reference  !== $payflexi_initial_transaction_reference){
+                
+                $transaction_amount  = $event->data->txn_amount;
 
-            $order_currency     = method_exists( $order, 'get_currency' ) ? $order->get_currency() : $order->get_order_currency();
-            $currency_symbol    = get_woocommerce_currency_symbol( $order_currency );
-            $order_total        = $order->get_total();
-            $order_amount       = $event->data->amount ? $event->data->amount : 0;
-            $amount_paid        = $event->data->txn_amount ? $event->data->txn_amount : 0;
-            $payflexi_ref       = $event->data->reference;
-            $payment_currency   = strtoupper( $event->data->currency);
-            $gateway_symbol     = get_woocommerce_currency_symbol($payment_currency);
-            if ($amount_paid < $order_total ) {
-                if($payflexi_ref === $event->data->initial_reference){
-                    add_post_meta($order_id, '_transaction_id', $payflexi_ref, true);
-                    add_post_meta($order_id, '_installment_amount_paid', $amount_paid, false);
-                    $order->update_status('on-hold', '');
-                    // Add Admin Order Note
-                    $admin_order_note = sprintf( __( '<strong>New Installment Order</strong>%1$sThis order is partial paid using PayFlexi Flexible Checkout.%2$sAmount Paid was <strong>%3$s (%4$s)</strong> while the total order amount is <strong>%5$s (%6$s)</strong>%7$s<strong>PayFlexi Transaction Reference:</strong> %8$s', 'payflexi-flexible-checkout-for-woocommerce' ), '<br />', '<br />', $currency_symbol, $amount_paid, $currency_symbol, $order_total, '<br />', $payflexi_ref );
-                    $order->add_order_note( $admin_order_note );
-                    wc_empty_cart();
+                $payment_id = SI_Payment::new_payment(
+                    array(
+                    'payment_method' => self::PAYMENT_METHOD,
+                    'invoice' => $invoice->get_id(),
+                    'amount' => $transaction_amount,
+                    'data' => array(
+                        'Status' => 'Successful',
+                        'Transaction Reference' => $payflexi_transaction_reference,
+                     ),
+                    ),
+                    SI_Payment::STATUS_AUTHORIZED
+                );
+
+                ray(['payment id' => $payment_id]);
+
+                if (! $payment_id) {
+                    return false;
                 }
-                if($payflexi_ref !== $event->data->initial_reference){
-                    $installment_amount_paid = get_post_meta($order->get_id(), '_installment_amount_paid', true );
-                    $total_installment_amount_paid = $installment_amount_paid + $amount_paid;
-                    ray(['Total Amount Paid' => $total_installment_amount_paid]);
-                    update_post_meta($order_id, '_installment_amount_paid', $total_installment_amount_paid, false);
-                    if($total_installment_amount_paid >= $order_total){
-                        $order->payment_complete( $event->data->initial_reference );
-                        $order->add_order_note( sprintf( 'PayFlexi Installment Payment Completed (Transaction Reference: %s)', $event->data->initial_reference ) );
-                    }else{
-                        $order->update_status('on-hold', '');
-                    }
-                }
-            }else{
-                $order->payment_complete( $payflexi_ref );
-                $order->add_order_note( sprintf( 'Payment via PayFlexi Flexible Checkout successful (Transaction Reference: %s)', $payflexi_ref ) );
-                wc_empty_cart();
-            }
+
+                $payment = SI_Payment::get_instance($payment_id);
+
+                ray(['payment' => $payment]);
+
+                do_action('payment_authorized', $payment);
+                $payment->set_status(SI_Payment::STATUS_COMPLETE);
+                do_action('payment_complete', $payment);
+    
+                return $payment;
+
+                exit;
+
+            }          
         }
 
         exit;

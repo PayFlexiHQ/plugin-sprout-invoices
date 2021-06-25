@@ -13,13 +13,13 @@ jQuery(function($) {
             title: si_payflexi_js_object.description
         };
         if (si_payflexi_js_object.invoice_id){
-            meta['order_id'] = si_payflexi_js_object.invoice_id;
-        }
-        if(si_payflexi_js_object.name){
-          meta['name'] = si_payflexi_js_object.name;
+            meta['invoice_id'] = si_payflexi_js_object.invoice_id;
         }
         if(si_payflexi_js_object.email){
             meta['email'] = si_payflexi_js_object.email;
+        }
+        if(si_payflexi_js_object.name){
+            meta['name'] = si_payflexi_js_object.name;
         }
         return meta;
     }
@@ -57,6 +57,7 @@ jQuery(function($) {
 
 		var payflexiHandler = PayFlexi.checkout({
             key: ''+si_payflexi_js_object.key+'',
+            gateway: ''+si_payflexi_js_object.gateway+'',
             reference: ''+si_payflexi_js_object.ref+'',
             name: ''+si_payflexi_js_object.name+'',
             email: ''+si_payflexi_js_object.email+'',
@@ -65,7 +66,7 @@ jQuery(function($) {
             meta: CheckoutMetaFields(),
 			onSuccess: payflexi_callback,
 			onExit: function() {
-                $( this.el ).unblock();
+                window.location.reload();
             },
             onDecline: function (response) {
                 console.log(response);
