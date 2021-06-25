@@ -1,9 +1,18 @@
-# PayFlexi Flexible Checkout Gateway for Sprout Invoices
+# PayFlexi Instalment Payment Gateway for Sprout Invoices
 
-The **PayFlexi Flexible Checkout Gateway for Sprout Invoices** plugin provides a payment option for the popular Client Invoicing by Sprout Invoices – Easy Estimates and Invoices for WordPress plugin.
+**PayFlexi Instalment Payment Gateway for Sprout Invoices allows you to accept instalment or full payments from your customers when paying for invoices.**. 
 
-This plugin allows your clients to pay for invoices in flexible installment with automatic recollection.
+### About Sprout Invoices**
 
-Here you can browse the source, look at open issues and keep track of development. 
+Sprout Invoices allows you to create beautiful estimates and invoices for your clients in minutes — not hours.
 
-## Installation
+### Installation 
+
+Install the [PayFlexi Instalment Payment Gateway for Sprout Invoices](https://wordpress.org/plugins/payflexi-instalment-payment-gateway-for-sprout-invoices/) via the Plugins section of your WordPress Dashboard.
+
+## Documentation
+* [PayFlexi Documentation](https://developers.payflexi.co/)
+* [PayFlexi Knowledgebase](https://support.payflexi.co)
+
+## Community
+If you are a developer, please join our Developer Community on [Slack](payflexicommunity.slack.com)

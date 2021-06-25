@@ -165,7 +165,7 @@ class SI_Payflexi extends SI_Credit_Card_Processors
                         'option' => array(
                             'type' => 'text',
                             'default' => self::$payment_gateway,
-                            'description' => __( 'This should correspond with your configured gateway on your PayFlexi merchant dashboard. Currently support "stripe" and "paystack"' , 'sprout-invoices' ),
+                            'description' => __( 'This should correspond with your configured gateway on your PayFlexi merchant dashboard. Currently e.g, "stripe", "paystack", "flutterwave"' , 'sprout-invoices' ),
                             ),
                         ),
                     self::API_MODE_OPTION => array(
