@@ -1,6 +1,6 @@
 <?php
 /*
-Plugin Name: Sprout Invoices Add-on - PayFlexi (Pay in Instalments)
+Plugin Name: PayFlexi Instalment Payment Gateway for Sprout Invoices
 Plugin URI: https://developers.payflexi.co/
 Description: Accept Full or Instalment Payments with PayFlexi for Sprout Invoices. Give your customers the option to spread the cost of an invoice  in several installments and automate recollection.
 Author: PayFlexi
