@@ -292,7 +292,7 @@ class SI_Payflexi extends SI_Credit_Card_Processors
 
         }
         
-        echo '<script type="text/javascript" src="https://payflexi.test/js/v1/global-payflexi.js"></script>';
+        echo '<script type="text/javascript" src="https://payflexi.co/js/v1/global-payflexi.js"></script>';
 		echo '<script type="text/javascript" src="' . SI_ADDON_PAYFLEXI_URL . '/resources/js/si-payflexi.jquery.js"></script>';
 
         // Enqueue scripts
@@ -314,7 +314,7 @@ class SI_Payflexi extends SI_Credit_Card_Processors
     {
         $reference = $_POST['reference'];
         $key = (self::$api_mode === self::MODE_TEST) ? self::$api_secret_key_test : self::$api_secret_key ;
-        $payflexi_url = 'https://api.payflexi.test/merchants/transactions/' . sanitize_text_field($reference);
+        $payflexi_url = 'https://api.payflexi.co/merchants/transactions/' . sanitize_text_field($reference);
         $headers = array(
             'Authorization' => 'Bearer ' . $key,
         );
@@ -407,8 +407,6 @@ class SI_Payflexi extends SI_Credit_Card_Processors
 
             $invoice = SI_Invoice::get_instance($invoice_id);
 
-            ray(['Webhook Invoice' => $invoice]);
-
             if ($invoice->get_status() === SI_Invoice::STATUS_PAID) {
                 exit;
             }
@@ -434,15 +432,11 @@ class SI_Payflexi extends SI_Credit_Card_Processors
                     SI_Payment::STATUS_AUTHORIZED
                 );
 
-                ray(['payment id' => $payment_id]);
-
                 if (! $payment_id) {
                     return false;
                 }
 
                 $payment = SI_Payment::get_instance($payment_id);
-
-                ray(['payment' => $payment]);
 
                 do_action('payment_authorized', $payment);
                 $payment->set_status(SI_Payment::STATUS_COMPLETE);
