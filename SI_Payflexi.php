@@ -67,13 +67,8 @@ class SI_Payflexi extends SI_Credit_Card_Processors
         if ( ! self::is_active() ) {
 			return;
 		}
-        // Enqueue Scripts
-        if (apply_filters('si_remove_scripts_styles_on_doc_pages', '__return_true')) {
-            // enqueue after enqueue is filtered
-            add_action('si_doc_enqueue_filtered', array( __CLASS__, 'enqueue' ));
-        } else { // enqueue normal
-            add_action('wp_enqueue_scripts', array( __CLASS__, 'enqueue' ));
-        }
+
+        add_action('wp_enqueue_scripts', array( __CLASS__, 'enqueue' ));
 
     }
 
@@ -293,7 +288,7 @@ class SI_Payflexi extends SI_Credit_Card_Processors
         }
         
         echo '<script type="text/javascript" src="https://payflexi.co/js/v1/global-payflexi.js"></script>';
-		echo '<script type="text/javascript" src="' . SI_ADDON_PAYFLEXI_URL . '/resources/js/si-payflexi.jquery.js"></script>';
+		echo '<script type="text/javascript" src="' . SI_ADDON_PAYFLEXI_URL . '/resources/js/si-payflexi.js"></script>';
 
         // Enqueue scripts
         wp_localize_script( 'si-payflexi-js', 'si_payflexi_js_object', apply_filters( 'si_payflexi_js_object_localization', $data_attributes ) );
@@ -312,7 +307,7 @@ class SI_Payflexi extends SI_Credit_Card_Processors
 
     public function process_payment(SI_Checkouts $checkout, SI_Invoice $invoice)
     {
-        $reference = $_POST['reference'];
+        $reference = sanitize_text_field($_POST['reference']);
         $key = (self::$api_mode === self::MODE_TEST) ? self::$api_secret_key_test : self::$api_secret_key ;
         $payflexi_url = 'https://api.payflexi.co/merchants/transactions/' . sanitize_text_field($reference);
         $headers = array(
@@ -369,7 +364,7 @@ class SI_Payflexi extends SI_Credit_Card_Processors
 		if ( ! is_a( $checkout->get_processor(), __CLASS__ ) ) {
 			return;
 		}
-		$access_code = ( isset( $_REQUEST['key'] ) ) ? $_REQUEST['key'] : '' ;
+		$access_code = (isset($_REQUEST['key'])) ? sanitize_text_field($_REQUEST['key']) : '' ;
 
 		wp_redirect( add_query_arg( array( 'key' => $access_code ), $checkout->checkout_confirmation_url( self::PAYMENT_SLUG ) ) );
 		exit();
